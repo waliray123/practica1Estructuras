@@ -38,6 +38,8 @@ void printPaso();
 int getNumAleatorio0a100();
 int getNumAleatorio1a2();
 void setNuevosClientes();
+void crearPilasCarr();
+void setNuevasCarretas();
 
 /*INICIALIZACION PARAMETROS GLOBALES*/
 int cantClientesIni;
@@ -47,7 +49,7 @@ int cantClientesColaP;
 int cantCajas;
 int numPaso;
 int codigoClientes;
-int MCarretas = 5;
+int MCarretas = 4;
 
 struct ColaEspera *colaInicial;
 struct PilaCarr *pilaCarr1;
@@ -78,12 +80,12 @@ void inicializarParametros(){
  *  Metodo que se utiliza para pedir los parametros iniciales
 */
 void menu(){
-    cantCarretPila = 1000;
+    cantCarretPila = 0;
     printf("********************** MENU ********************** \n");
     printf("Ingrese los parametros requeridos \n");
     printf("Ingrese la cantidad de clientes inicial \n");
     scanf("%d", &cantClientesIni);
-    while(cantCarretPila/2 >= MCarretas){
+    while(cantCarretPila < MCarretas/2){
         printf("Ingrese la cantidad de carretas por pila \n");
         scanf("%d", &cantCarretPila);    
     }
@@ -96,6 +98,12 @@ void menu(){
     printf("************** INICIO DE SIMULACION ************** \n");
     printPaso();
     setNuevosClientes(cantClientesIni);
+    printf("Se van a crear las pilas de las carretas con cantidad: %i\n",cantCarretPila);
+    crearPilasCarr(pilaCarr1);
+    printf("Se crearon las pilas de las carretas1\n");
+    crearPilasCarr(pilaCarr2);
+    printf("Se crearon las pilas de las carretas2\n");
+    setNuevasCarretas();
 }
 
 void printPaso(){
@@ -158,47 +166,69 @@ void setNuevosClientes(int cantClientes){
     } 
 }
 
+/*Metodo que inicializa alguna pila en su cantidad maxima de espacios*/
+void crearPilasCarr(struct PilaCarr *pilaUsar){
+    struct PilaCarr *pilaTemp;
+    pilaTemp = pilaUsar;
+    for(int i = 0; i < cantCarretPila ; i++){
+        struct PilaCarr *pilaNueva;
+        pilaNueva = (struct PilaCarr *)malloc(sizeof(struct PilaCarr));
+        pilaNueva->carreta = NULL;
+        pilaNueva->sigPila = NULL;
+        pilaTemp->sigPila = pilaNueva;
+        pilaTemp = pilaNueva;
+    }    
+}
+
+/*Metodo que se usa para ingresar una carreta al final de una pila*/
+int setCarretasEnPila(struct PilaCarr *pilaC,struct Carreta *carretaIns){
+    short int estaLlena = 1;
+    struct PilaCarr *pilaTemp;
+    pilaTemp = pilaC;     
+    for(int i = 0; i < cantCarretPila ; i++){
+        if(pilaTemp->carreta == NULL){
+            pilaTemp->carreta = carretaIns;
+            estaLlena = 0;
+            break;  
+        }              
+        pilaTemp = pilaTemp->sigPila;
+    }
+    return estaLlena;
+}
+
+/*Metodo que solicita el numero de pila a insertar la carreta
+ *y la inserta, si la pila esta llena escoge la otra pila.
+*/
+void setCarretaEnPila(struct Carreta *carretaNueva){    
+    int numPila = getNumAleatorio1a2();        
+    if (numPila == 1)
+    {            
+        int estaLlena = setCarretasEnPila(pilaCarr1,carretaNueva);
+        if (estaLlena = 1){
+            //Se ingresa la carreta en la pila 2 porque la 1 esta llena
+            estaLlena = setCarretasEnPila(pilaCarr2,carretaNueva);                
+        }
+    }else{
+        int estaLlena = setCarretasEnPila(pilaCarr2,carretaNueva);
+        if (estaLlena = 1)
+        {
+            //Se ingresa la carreta en la pila 1 porque la 2 esta llena
+            estaLlena = setCarretasEnPila(pilaCarr1,carretaNueva);
+        } 
+    }
+    printf("Se inserto la carreta con codigo: %i en la pila %i\n",carretaNueva->codigoCar,numPila);
+}
+
+/*Metodo se usa para crear todas las carretas solicitadas*/
 void setNuevasCarretas(){    
     int codigosCarreta = 0;
     for(int i = 0 ; i < MCarretas ; i++){
         struct Carreta *carretaNueva;
         struct PilaCarr *pilaNueva;  
-        int numPila = getNumAleatorio1a2;
-        if (numPila == 1)
-        {
-            if (pilaCarr1->sigPila = NULL)
-            {
-                carretaNueva = (struct Carreta *)malloc(sizeof(struct Carreta));
-                carretaNueva->codigoCar = codigosCarreta;
-                pilaNueva = (struct PilaCarr *)malloc(sizeof(struct PilaCarr));
-                pilaNueva->sigPila = NULL;
-                pilaNueva->carreta = NULL;
-                pilaCarr1->carreta = carretaNueva;
-                pilaCarr1->sigPila = pilaNueva;                       
-                printf("Se ingreso nueva carreta a pila 1 con codigo %i exitosamente\n",carretaNueva->codigoCar); 
-            }else{
-                struct PilaCarr *pilaTemp;
-                pilaTemp = pilaCarr1;
-                while(pilaTemp != NULL){
-                    if(pilaTemp->sigPila == NULL){
-                        break;  
-                    }              
-                    pilaTemp = pilaTemp->sigPila;        
-                }
-                carretaNueva = (struct Carreta *)malloc(sizeof(struct Carreta));
-                carretaNueva->codigoCar = codigosCarreta;
-                pilaNueva = (struct PilaCarr *)malloc(sizeof(struct PilaCarr));
-                pilaNueva->sigPila = NULL;
-                pilaNueva->carreta = NULL;
-                pilaTemp->carreta = carretaNueva;
-                pilaTemp->sigPila = pilaNueva;                       
-                printf("Se ingreso nueva carreta a pila 1 con codigo %i exitosamente\n",carretaNueva->codigoCar); 
-            }
-            
-        }else{
-
-        }
-        codigosCarreta++;
-                  
+        carretaNueva = (struct Carreta *)malloc(sizeof(struct Carreta));
+        carretaNueva->codigoCar = codigosCarreta;
+        setCarretaEnPila(carretaNueva);
+        codigosCarreta++;                  
     }
 }
+
