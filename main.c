@@ -19,6 +19,8 @@ struct Caja {
    short int  estado;
    struct Cliente *clienteA;
    struct Carreta *carretaU;
+   struct Caja *sigCaja;   
+   struct Caja *antCaja;
 };
 
 struct ColaEspera{
@@ -31,6 +33,12 @@ struct PilaCarr{
     struct PilaCarr *sigPila;
 };
 
+struct ListaCompras{
+    struct Cliente *cliente;
+    struct ListaCompras *sigLis;
+    struct ListaCompras *antLis;
+};
+
 /*INICIALIZACION FUNCIONES*/
 void menu();
 void inicializarParametros();
@@ -40,6 +48,11 @@ int getNumAleatorio1a2();
 void setNuevosClientes();
 void crearPilasCarr();
 void setNuevasCarretas();
+void setClientesCompras();
+void setNuevasCajas();
+void setClientesColaPagos();
+void setNuevosClientesEnColaPagos();
+void setNuevosClientesEnCompras();
 
 /*INICIALIZACION PARAMETROS GLOBALES*/
 int cantClientesIni;
@@ -54,6 +67,10 @@ int MCarretas = 4;
 struct ColaEspera *colaInicial;
 struct PilaCarr *pilaCarr1;
 struct PilaCarr *pilaCarr2;
+struct ListaCompras *listaCompras;
+struct Caja *cajaInicial;
+struct ColaEspera *colaPagosInicial;
+
 
 int main(){    
     srand (time(NULL));
@@ -74,6 +91,21 @@ void inicializarParametros(){
     pilaCarr2 = (struct PilaCarr *)malloc(sizeof(struct PilaCarr));
     pilaCarr2->carreta = NULL;
     pilaCarr2->sigPila = NULL;
+    listaCompras = (struct ListaCompras *)malloc(sizeof(struct ListaCompras));
+    listaCompras->sigLis = NULL;
+    listaCompras->antLis = NULL;
+    listaCompras->cliente = NULL;
+    cajaInicial = (struct Caja *)malloc(sizeof(struct Caja));
+    cajaInicial->sigCaja = NULL;
+    cajaInicial->antCaja = NULL;
+    cajaInicial->clienteA = NULL;
+    cajaInicial->carretaU = NULL;
+    cajaInicial->codigoCaja = 1;
+    cajaInicial->estado = 0;
+    cajaInicial->tiempo = rand () % (5)+1;
+    colaPagosInicial = (struct ColaEspera *)malloc(sizeof(struct ColaEspera));
+    colaPagosInicial->cliente = NULL;
+    colaPagosInicial->sigCola = NULL;
 }
 
 /* Menu de inicio 
@@ -88,7 +120,7 @@ void menu(){
     while(cantCarretPila < MCarretas/2){
         printf("Ingrese la cantidad de carretas por pila \n");
         scanf("%d", &cantCarretPila);    
-    }
+    }    
     printf("Ingrese la cantidad de clientes comprando \n");
     scanf("%d", &cantClientesComp);
     printf("Ingrese la cantidad de clientes en cola de pagos \n");
@@ -98,12 +130,12 @@ void menu(){
     printf("************** INICIO DE SIMULACION ************** \n");
     printPaso();
     setNuevosClientes(cantClientesIni);
-    printf("Se van a crear las pilas de las carretas con cantidad: %i\n",cantCarretPila);
     crearPilasCarr(pilaCarr1);
-    printf("Se crearon las pilas de las carretas1\n");
     crearPilasCarr(pilaCarr2);
-    printf("Se crearon las pilas de las carretas2\n");
+    setNuevosClientesEnColaPagos();
+    setNuevosClientesEnCompras();
     setNuevasCarretas();
+    setNuevasCajas();
 }
 
 void printPaso(){
@@ -232,3 +264,90 @@ void setNuevasCarretas(){
     }
 }
 
+/*Metodo agrega a clientes a la lista de compras*/
+void setClientesCompras(struct Cliente *clienteIns){
+    struct ListaCompras *listTemp;
+    if (listaCompras->sigLis == NULL){
+        listTemp = (struct ListaCompras *)malloc(sizeof(struct ListaCompras));
+        listTemp->sigLis = listaCompras;
+        listTemp->antLis = listaCompras;
+        listaCompras->cliente = clienteIns;
+        listaCompras->sigLis = listTemp;  
+        listaCompras->antLis = listTemp;
+        printf("Se inserto el cliente con codigo: %i en compras\n",clienteIns->codigoCli);
+    }else{                
+        struct ListaCompras *nuevaList;
+        nuevaList = (struct ListaCompras *)malloc(sizeof(struct ListaCompras));
+        listTemp = listaCompras->antLis;
+        listTemp->sigLis = nuevaList;            
+        nuevaList->sigLis = listaCompras;
+        nuevaList->antLis = listTemp;
+        listaCompras->antLis = nuevaList;
+        listTemp->cliente = clienteIns;
+        printf("Se inserto el cliente con codigo: %i en compras\n",clienteIns->codigoCli);
+    }
+}
+
+/*Metodo que crea la lista de las cajas*/
+void setNuevasCajas(){
+    struct Caja *cajaTemp;
+    cajaTemp = cajaInicial;
+    for(int i = 0 ; i < cantCajas ; i++){
+        struct Caja *cajaNueva;
+        cajaNueva = (struct Caja *)malloc(sizeof(struct Caja));
+        cajaTemp->sigCaja = cajaNueva;        
+        cajaNueva->antCaja = cajaTemp;
+        cajaNueva->codigoCaja = i+2;
+        cajaNueva->estado = 0;
+        cajaNueva->tiempo = rand () % (5)+1;
+        cajaTemp = cajaNueva;
+    }
+    printf("Se insertaron %i cajas\n",cantCajas);
+}
+
+/*Metodo que inserta a algun cliente en la cola de pagos*/
+void setClientesColaPagos(struct Cliente *clienteIns){
+    struct ColaEspera *colaTemp;
+    if (colaPagosInicial->sigCola == NULL)
+    {
+        colaTemp = colaPagosInicial;
+    }else{
+        colaTemp = colaPagosInicial;
+        while (colaTemp != NULL)
+        {
+            if (colaTemp->sigCola == NULL)
+            {
+                break;
+            }            
+            colaTemp = colaTemp->sigCola;            
+        }        
+    }    
+    struct ColaEspera *colaNueva;
+    colaNueva = (struct ColaEspera *)malloc(sizeof(struct ColaEspera));
+    colaNueva->sigCola = NULL;
+    colaNueva->cliente = NULL;
+    colaTemp->sigCola = colaNueva;
+    colaTemp->cliente = clienteIns;
+    printf("Se inserto el cliente con codigo: %i en cola de Pagos\n",clienteIns->codigoCli);
+}
+
+
+void setNuevosClientesEnColaPagos(){
+    for(int i = 0; i< cantClientesColaP; i++){
+        struct Cliente *clienteNuevo;
+        clienteNuevo = (struct Cliente *)malloc(sizeof(struct Cliente));
+        clienteNuevo->codigoCli = codigoClientes;
+        setClientesColaPagos(clienteNuevo);
+        codigoClientes++;
+    }
+}
+
+void setNuevosClientesEnCompras(){
+    for(int i = 0; i< cantClientesComp; i++){
+        struct Cliente *clienteNuevo;
+        clienteNuevo = (struct Cliente *)malloc(sizeof(struct Cliente));
+        clienteNuevo->codigoCli = codigoClientes;
+        setClientesCompras(clienteNuevo);
+        codigoClientes++;
+    }
+}
