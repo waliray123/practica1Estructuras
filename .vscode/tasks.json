@@ -21,6 +21,25 @@
                 "isDefault": true
             },
             "detail": "Tarea generada por el depurador."
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: gcc compilar archivo activo",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "compilador: /usr/bin/gcc"
         }
     ],
     "version": "2.0.0"

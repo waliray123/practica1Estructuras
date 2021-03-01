@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+
+
  
  /*INICIALIZACION DE ESTRUCTURAS A UTILIZAR*/
 struct Carreta {
@@ -17,6 +19,7 @@ struct Caja {
    int  codigoCaja;
    int  tiempo;
    short int  estado;
+   int tiempoPas;
    struct Cliente *clienteA;
    struct Carreta *carretaU;
    struct Caja *sigCaja;   
@@ -39,12 +42,14 @@ struct ListaCompras{
     struct ListaCompras *antLis;
 };
 
+//#include "Graficar.h"
+
 /*INICIALIZACION FUNCIONES*/
 void menu();
 void inicializarParametros();
 void printPaso();
-int getNumAleatorio0a100();
-int getNumAleatorio1a2();
+int  getNumAleatorio0a100();
+int  getNumAleatorio1a2();
 void setNuevosClientes();
 void crearPilasCarr();
 void setNuevasCarretas();
@@ -53,6 +58,22 @@ void setNuevasCajas();
 void setClientesColaPagos();
 void setNuevosClientesEnColaPagos();
 void setNuevosClientesEnCompras();
+void siguientePaso();
+void validaAcciones();
+void validarSalidaCajas();
+void validarAcciones();
+void ingresarClientesAColaCompras();
+void ingresarClientesACajas();
+void ingresarClientesAColaPagos();
+void ingresarClientesCompras();
+int  contarCarretasEnPila();
+void sacarClienteColaInicial();
+void graficar();
+void graficarColaInicial();
+void graficarCarretas();
+void graficarCompras();
+void graficarColaPagos();
+void graficarCajas();
 
 /*INICIALIZACION PARAMETROS GLOBALES*/
 int cantClientesIni;
@@ -62,7 +83,9 @@ int cantClientesColaP;
 int cantCajas;
 int numPaso;
 int codigoClientes;
-int MCarretas = 4;
+int codigosCarreta;
+int MCarretas = 6;
+int MCarretas2;
 
 struct ColaEspera *colaInicial;
 struct PilaCarr *pilaCarr1;
@@ -73,15 +96,20 @@ struct ColaEspera *colaPagosInicial;
 
 
 int main(){    
+    //revisar();
     srand (time(NULL));
     numPaso = 0;
     inicializarParametros();
     menu();
+    siguientePaso();    
     return 0;    
 }
 
 /*Metodo inicial que inicializa la estructuras en memoria*/
 void inicializarParametros(){
+    cantClientesComp = MCarretas+1;
+    cantClientesColaP = MCarretas+1;
+    codigosCarreta = 0;
     colaInicial = (struct ColaEspera *)malloc(sizeof(struct ColaEspera));
     colaInicial->cliente = NULL;
     colaInicial->sigCola = NULL;
@@ -113,6 +141,7 @@ void inicializarParametros(){
 */
 void menu(){
     cantCarretPila = 0;
+    int MCarretasTemp = MCarretas;
     printf("********************** MENU ********************** \n");
     printf("Ingrese los parametros requeridos \n");
     printf("Ingrese la cantidad de clientes inicial \n");
@@ -120,11 +149,30 @@ void menu(){
     while(cantCarretPila < MCarretas/2){
         printf("Ingrese la cantidad de carretas por pila \n");
         scanf("%d", &cantCarretPila);    
-    }    
-    printf("Ingrese la cantidad de clientes comprando \n");
-    scanf("%d", &cantClientesComp);
-    printf("Ingrese la cantidad de clientes en cola de pagos \n");
-    scanf("%d", &cantClientesColaP);
+    }
+
+    while(cantClientesComp > MCarretasTemp){
+        printf("Ingrese la cantidad de clientes comprando \n");
+        scanf("%d", &cantClientesComp);
+        if (cantClientesComp > MCarretasTemp)
+        {
+            printf("No puede ingresar mas clientes que la cantidad de carretas restante\n");
+        }
+    }
+    MCarretasTemp = MCarretasTemp-cantClientesComp;
+
+    while(cantClientesColaP > MCarretasTemp){
+        printf("Ingrese la cantidad de clientes en cola de pagos \n");
+        scanf("%d", &cantClientesColaP);
+        if (cantClientesColaP > MCarretasTemp)
+        {
+            printf("No puede ingresar mas clientes que la cantidad de carretas restante\n");
+        }
+    }
+    MCarretasTemp = MCarretasTemp-cantClientesColaP;
+    MCarretas2 = MCarretasTemp;
+
+
     printf("Ingrese la cantidad de cajas \n");
     scanf("%d", &cantCajas);
     printf("************** INICIO DE SIMULACION ************** \n");
@@ -132,8 +180,8 @@ void menu(){
     setNuevosClientes(cantClientesIni);
     crearPilasCarr(pilaCarr1);
     crearPilasCarr(pilaCarr2);
-    setNuevosClientesEnColaPagos();
     setNuevosClientesEnCompras();
+    setNuevosClientesEnColaPagos();
     setNuevasCarretas();
     setNuevasCajas();
 }
@@ -236,13 +284,13 @@ void setCarretaEnPila(struct Carreta *carretaNueva){
     if (numPila == 1)
     {            
         int estaLlena = setCarretasEnPila(pilaCarr1,carretaNueva);
-        if (estaLlena = 1){
+        if (estaLlena == 1){
             //Se ingresa la carreta en la pila 2 porque la 1 esta llena
             estaLlena = setCarretasEnPila(pilaCarr2,carretaNueva);                
         }
     }else{
         int estaLlena = setCarretasEnPila(pilaCarr2,carretaNueva);
-        if (estaLlena = 1)
+        if (estaLlena ==1)
         {
             //Se ingresa la carreta en la pila 1 porque la 2 esta llena
             estaLlena = setCarretasEnPila(pilaCarr1,carretaNueva);
@@ -252,9 +300,8 @@ void setCarretaEnPila(struct Carreta *carretaNueva){
 }
 
 /*Metodo se usa para crear todas las carretas solicitadas*/
-void setNuevasCarretas(){    
-    int codigosCarreta = 0;
-    for(int i = 0 ; i < MCarretas ; i++){
+void setNuevasCarretas(){        
+    for(int i = 0 ; i < MCarretas2 ; i++){
         struct Carreta *carretaNueva;
         struct PilaCarr *pilaNueva;  
         carretaNueva = (struct Carreta *)malloc(sizeof(struct Carreta));
@@ -331,23 +378,475 @@ void setClientesColaPagos(struct Cliente *clienteIns){
     printf("Se inserto el cliente con codigo: %i en cola de Pagos\n",clienteIns->codigoCli);
 }
 
-
+/*Metodo que inserta a los nuevos clientes en la cola de pagos*/
 void setNuevosClientesEnColaPagos(){
     for(int i = 0; i< cantClientesColaP; i++){
         struct Cliente *clienteNuevo;
+        struct Carreta *carretaIns;
         clienteNuevo = (struct Cliente *)malloc(sizeof(struct Cliente));
+        carretaIns = (struct Carreta *)malloc(sizeof(struct Carreta));
+        carretaIns->codigoCar = codigosCarreta;
         clienteNuevo->codigoCli = codigoClientes;
+        clienteNuevo->carretaU = carretaIns;
         setClientesColaPagos(clienteNuevo);
+        codigosCarreta++;
         codigoClientes++;
     }
 }
 
+/*Metodo que inserta a los nuevos clientes en la lista de compras*/
 void setNuevosClientesEnCompras(){
     for(int i = 0; i< cantClientesComp; i++){
         struct Cliente *clienteNuevo;
+        struct Carreta *carretaIns;
         clienteNuevo = (struct Cliente *)malloc(sizeof(struct Cliente));
+        carretaIns = (struct Carreta *)malloc(sizeof(struct Carreta));        
+        carretaIns->codigoCar = codigosCarreta;
         clienteNuevo->codigoCli = codigoClientes;
+        clienteNuevo->carretaU = carretaIns;
         setClientesCompras(clienteNuevo);
+        codigosCarreta++;
         codigoClientes++;
+    }
+}
+
+/*Metodo que permite la continuidad de la simulacion 
+ *Asi como tambien el ingreso de nuevos clientes a esta
+*/
+void siguientePaso(){
+    int opcion = 3;
+    while(opcion != 0){                
+        printf("Si desea terminar la simulacion ingrese [0]\n");
+        printf("Si desea ingresar nuevos clientes ingrese [1]\n");
+        printf("Si desea graficar el paso actual ingrese[2]\n");
+        printf("Si desea continuar sin ingresar nada ingrese [3]\n");
+        scanf("%d",&opcion);        
+        if (opcion == 1)
+        {
+            int cantClientesNuevos;
+            printf("Ingrese la cantidad de clientes inicial \n");
+            scanf("%d", &cantClientesNuevos);
+            setNuevosClientes(cantClientesNuevos);
+            numPaso++;
+            printPaso();
+            validarAcciones();
+        }else if(opcion == 0){
+            printf("Se finalizara la simulacion \n");
+        }else if(opcion == 2){
+            graficar();   
+        }else{
+            numPaso++;
+            printPaso();
+            validarAcciones();
+        }                
+    }
+}
+
+/*Metodo que valida las acciones de la simulacion
+ * Llama a los demas metodos para simular el traslado de clientes
+ * a sus respectivas pilas y colas.
+*/
+void validarAcciones(){
+    validarSalidaCajas();
+    ingresarClientesACajas();
+    ingresarClientesAColaPagos();
+    ingresarClientesCompras();
+}
+
+/*Suma un turno a las cajas que tienen algun cliente atendiendo*/
+void sumarACajasTurno(){
+    struct Caja *cajaTemp = cajaInicial;
+    while (cajaTemp != NULL)
+    {
+        if (cajaTemp->estado == 1)
+        {
+            cajaTemp->tiempoPas++;
+        }        
+        cajaTemp = cajaTemp->sigCaja;
+    }
+}
+
+/*Metodo que valida que cliente ya paso su tiempo en su caja
+ *si el cliente ya supero el tiempo lo elimina y devuelve la carreta
+*/
+void validarSalidaCajas(){
+    sumarACajasTurno();
+    struct Caja *cajaTemp = cajaInicial;
+    while (cajaTemp != NULL)
+    {
+        if (cajaTemp->estado == 1)
+        {
+            if (cajaTemp->tiempo <= cajaTemp->tiempoPas)
+            {
+                struct Cliente *cliente = cajaTemp->clienteA;
+                struct Carreta *carreta = cajaTemp->clienteA->carretaU;
+                //TODO
+                //Devolver carreta
+                setCarretaEnPila(carreta);
+                //Devolver Parametros inciales
+                cajaTemp->carretaU = NULL;
+                cajaTemp->clienteA = NULL;
+                cajaTemp->estado = 0;
+                cajaTemp->tiempoPas = 0;
+                //Matar al cliente que tiene dentro     
+                printf("El cliente con codigo %i salio de la caja %i y dejo la carreta %i \n",cliente->codigoCli,cajaTemp->codigoCaja,carreta->codigoCar); 
+                cliente->carretaU = NULL;                                  
+                free(cliente);
+            }            
+        }        
+        cajaTemp = cajaTemp->sigCaja;
+    }
+}
+
+/*Metoto que verifica que caja esta vacia
+ *e ingresa al primer cliente en ella
+*/
+void ingresarClientesACajas(){
+    struct Caja *cajaTemp = cajaInicial;
+    while (cajaTemp != NULL)
+    {
+        if (colaPagosInicial->cliente == NULL)
+        {
+            break;
+        }
+        if (cajaTemp->estado == 0)
+        {
+            struct Cliente *clienteIns;
+            struct ColaEspera *colaTemp;
+            colaTemp = colaPagosInicial;
+            clienteIns = colaTemp->cliente;
+            cajaTemp->clienteA = clienteIns;
+            cajaTemp->carretaU = clienteIns->carretaU;
+            cajaTemp->estado = 1;
+            colaPagosInicial = colaPagosInicial->sigCola;
+            colaTemp->cliente == NULL;
+            colaTemp->sigCola == NULL;
+            if (colaTemp != colaPagosInicial)
+            {
+                free(colaTemp);
+            }
+            printf("El cliente con codigo %i ingreso a la caja %i \n",clienteIns->codigoCli,cajaTemp->codigoCaja);                   
+        }
+        cajaTemp = cajaTemp->sigCaja;
+    }
+}
+
+/*Metodo que recibe un numero aleatorio de 0 a 100
+ *luego verifica si hay algun cliente con ese indice 
+ *si lo existe lo envia a la cola de pagos
+*/
+void ingresarClientesAColaPagos(){
+    struct ListaCompras *listTemp;
+    listTemp = listaCompras;
+    int indice = 0;
+    int numA;
+    numA = getNumAleatorio0a100();
+    printf("Se saco el num: %i \n",numA);
+    while(listTemp->sigLis != listaCompras){
+        //printf("El cliente con codigo:%i esta en compras, indice: %i\n",listTemp->cliente->codigoCli,indice);
+        if (numA == indice)
+        {
+            printf("El cliente con codigo: %i saldra de compras\n",listTemp->cliente->codigoCli);
+            setClientesColaPagos(listTemp->cliente);
+            struct ListaCompras *listAnt;
+            struct ListaCompras *listSig;
+            listAnt = listTemp->antLis;
+            listSig = listTemp->sigLis;
+            listAnt->sigLis = listSig;
+            listSig->antLis = listAnt;
+            free(listTemp);
+            break;
+        }
+        listTemp = listTemp->sigLis;
+        indice++;
+    }
+}
+
+/*Metodo que verifica si hay carretas para enviar
+ *a el primer cliente en la cola de espera a la lista de compras
+*/
+void ingresarClientesCompras(){
+    //Ver cuantos clientes hay
+    struct ColaEspera *ct;
+    ct = colaInicial;
+    int cantCarr1 = contarCarretasEnPila(pilaCarr1);
+    int cantCarr2 = contarCarretasEnPila(pilaCarr2);
+    //printf("Cant carretas en pila 1: %i\n",cantCarr1);
+    //printf("Cant carretas en pila 2: %i\n",cantCarr2);
+    
+    
+    while(ct != NULL){
+        if(ct->sigCola == NULL){
+            break;  
+        }
+        //printf("Cliente cod: %i esta en cola espera\n",ct->cliente->codigoCli);
+        struct PilaCarr *pilat;
+        if (cantCarr1 > 0 || cantCarr2 > 0)
+        {
+            int numA = getNumAleatorio1a2();
+            printf("Se saco el num: %i\n",numA);
+            switch (numA)
+            {
+            case 1:
+                if (cantCarr1 == 0)
+                {
+                    numA = 2;
+                }else{
+                    pilat = pilaCarr1;
+                    for (int i = 0; i < cantCarr1-1; i++)
+                    {
+                        pilat = pilat->sigPila;
+                    }                    
+                    //printf("Se le dara al cliente la carreta con codigo: %i\n",pilat->carreta->codigoCar);      
+                    sacarClienteColaInicial(pilat->carreta);    
+                    pilat->carreta = NULL;          
+                    cantCarr1--;
+                    break;
+                }
+                
+            case 2:
+                if (cantCarr2 == 0)
+                {
+                    numA = 1;
+                }else{
+                    pilat = pilaCarr2;
+                    for (int i = 0; i < cantCarr2-1; i++)
+                    {
+                        pilat = pilat->sigPila;
+                    }
+                    //printf("Se le dara al cliente la carreta con codigo: %i\n",pilat->carreta->codigoCar);
+                    sacarClienteColaInicial(pilat->carreta);
+                    pilat->carreta = NULL;
+                    cantCarr2--;
+                    break;
+                }
+            }
+        }else{
+            break;
+        }
+        //ct = ct->sigCola;        
+    }
+}
+
+/*Metodo que saca al primer cliente en la cola incial de espera
+ *le asigna una carreta y lo ingresa en la lista de compras
+*/
+void sacarClienteColaInicial(struct Carreta *carretaAsign){
+    struct Cliente *client;
+    struct ColaEspera *ct;
+    ct = colaInicial;
+    client = ct->cliente;
+    client->carretaU = carretaAsign;    
+    setClientesCompras(client);
+    colaInicial = colaInicial->sigCola;
+    free(ct);
+}
+
+
+
+/*Metodo que cuenta la cantidad de carretas que tiene la pila*/
+int contarCarretasEnPila(struct PilaCarr *pilaCarr){
+    struct PilaCarr *pilT;
+    pilT = pilaCarr;
+    int cant = 0;
+    for(int i = 0; i < cantCarretPila;i++){
+        if (pilT->carreta == NULL)
+        {
+            break;
+        }
+        cant++;
+        pilT = pilT->sigPila;
+    }
+        
+    return cant;
+}
+
+void graficar(){
+    FILE* fichero;
+    fichero = fopen("grafico.dot", "wt");
+    fputs("digraph G {\n", fichero);
+    graficarColaInicial(fichero);
+    graficarCarretas(pilaCarr1,fichero);
+    graficarCarretas(pilaCarr2,fichero);
+    graficarCompras(fichero);
+    graficarColaPagos(fichero);
+    graficarCajas(fichero);
+    fputs("}", fichero);
+    fclose(fichero);
+    printf("Proceso completado\n");
+    system("dot -Tpng grafico.dot -o grafico.png");
+}
+
+void graficarColaInicial(FILE* fichero){
+    //fputs("node3 [shape=record, label=\"{ a | b | c }\"]",fichero);
+    /*fputs("nodeCI[shape=record, label=\"{ ",fichero); //a | b | c }\"]
+    while(ct != NULL){
+        if(ct->sigCola == NULL){
+            break;  
+        }          
+        fputs("Cliente: ",fichero);
+        //fputs(ct->cliente->codigoCli,fichero);
+        fprintf (fichero, "%d",ct->cliente->codigoCli);
+        fputs("|",fichero);
+        ct = ct->sigCola;        
+    }
+    fputs("}\"];\n",fichero);
+    */
+
+    int cantClientes = 0;
+    struct ColaEspera *ct;
+    ct = colaInicial;
+    while(ct->sigCola != NULL){
+        if (ct->sigCola == NULL)
+        {
+            break;
+        }
+        fputs("nodeCI",fichero);
+        fprintf (fichero, "%d",cantClientes);
+        fputs(" [shape=oval, label=\"Cliente: ",fichero);
+        fprintf (fichero, "%d",ct->cliente->codigoCli);
+        fputs("\"];\n",fichero); 
+        cantClientes++;
+        ct = ct->sigCola;
+    } 
+    for(int i = 0; i < (cantClientes-1);i++){
+        fputs("nodeCI",fichero);
+        fprintf (fichero, "%d",i);
+        fputs(" -> ",fichero);
+        fputs("nodeCI",fichero);
+        fprintf (fichero, "%d",(i+1));
+        fputs(";\n",fichero);
+    }
+}
+
+void graficarCarretas(struct PilaCarr *pilaUsar,FILE* fichero){
+    struct PilaCarr *pilaTemp;
+    pilaTemp = pilaUsar;
+    if (pilaUsar == pilaCarr1)
+    {
+        fputs("nodeP1 [shape=record, label=\"{ ",fichero);
+    }else{
+        fputs("nodeP2 [shape=record, label=\"{ ",fichero);
+    }
+    
+    for(int i = 0; i < cantCarretPila ; i++){
+        if (pilaTemp->carreta != NULL)
+        {
+            fputs("Carreta: ",fichero);
+            fprintf (fichero, "%d",pilaTemp->carreta->codigoCar);
+        }
+        fputs("|",fichero);
+        pilaTemp = pilaTemp->sigPila;
+    }
+    fputs("}\"];\n",fichero);
+}
+
+void graficarCompras(FILE* fichero){
+    int numberNode = 0;
+    struct ListaCompras *listTemp;
+    listTemp = listaCompras;
+    while(listTemp->sigLis != listaCompras){
+        fputs("nodeL",fichero);
+        fprintf (fichero, "%d",numberNode);
+        fputs(" [shape=box, label=\"{ ",fichero);
+        fputs(" Cliente: ",fichero);
+        fprintf (fichero, "%d",listTemp->cliente->codigoCli);
+        fputs(" Carreta: ",fichero);
+        fprintf (fichero, "%d",listTemp->cliente->carretaU->codigoCar);
+        fputs("}\"];\n",fichero);
+        numberNode++;
+        listTemp = listTemp->sigLis;
+    }
+    int cantClientes = numberNode;
+    numberNode = 0;    
+    for(int i = 0; i < cantClientes;i++){
+        fputs("nodeL",fichero);
+        fprintf (fichero, "%d",i);
+        fputs(" -> ",fichero);
+        fputs("nodeL",fichero);
+        if(i == (cantClientes-1)){
+            fprintf (fichero, "%d",0);
+        }else{
+            fprintf (fichero, "%d",(i+1));
+        }
+        fputs(";\n",fichero);
+    }
+
+    for(int i = cantClientes-1; i >= 0;i--){
+        fputs("nodeL",fichero);
+        fprintf (fichero, "%d",i);
+        fputs(" -> ",fichero);
+        fputs("nodeL",fichero);
+        if(i == (0)){
+            fprintf (fichero, "%d",cantClientes-1);
+        }else{
+            fprintf (fichero, "%d",(i-1));
+        }
+        fputs(";\n",fichero);
+    }
+}
+
+void graficarColaPagos(FILE* fichero){
+    int cantClientes = 0;
+    struct ColaEspera *ct;
+    ct = colaPagosInicial;
+    while(ct->sigCola != NULL){
+        if (ct->sigCola == NULL)
+        {
+            break;
+        }
+        fputs("nodeCP",fichero);
+        fprintf (fichero, "%d",cantClientes);
+        fputs(" [shape=oval, label=\"Cliente: ",fichero);
+        fprintf (fichero, "%d",ct->cliente->codigoCli);
+        fputs("\"];\n",fichero); 
+        cantClientes++;
+        ct = ct->sigCola;
+    } 
+    for(int i = 0; i < (cantClientes-1);i++){
+        fputs("nodeCP",fichero);
+        fprintf (fichero, "%d",i);
+        fputs(" -> ",fichero);
+        fputs("nodeCP",fichero);
+        fprintf (fichero, "%d",(i+1));
+        fputs(";\n",fichero);
+    }
+}
+
+void graficarCajas(FILE* fichero){
+    struct Caja *cajat;
+    cajat = cajaInicial;
+    for(int i = 0; i < cantCajas; i++){
+        fputs("nodeCA",fichero);
+        fprintf (fichero, "%d",i);
+        fputs(" [shape=box, label=\"Caja: ",fichero);
+        fprintf (fichero, "%d",cajat->codigoCaja);
+        fputs(" Turnos: ",fichero);
+        fprintf (fichero, "%d",cajat->tiempo);
+        if (cajat->estado == 0)
+        {
+            fputs(" LIBRE",fichero);    
+        }else{
+            fputs(" OCUPADO",fichero);    
+        }
+        fputs("\"];\n",fichero);
+        cajat = cajat->sigCaja;
+    }
+    for(int i = 0; i < (cantCajas-1); i++){
+        fputs("nodeCA",fichero);
+        fprintf (fichero, "%d",i);
+        fputs(" -> ",fichero);
+        fputs("nodeCA",fichero);
+        fprintf (fichero, "%d",(i+1));
+        fputs(";\n",fichero);
+    }
+    
+    for(int i = (cantCajas-1); i > 0; i--){
+        fputs("nodeCA",fichero);
+        fprintf (fichero, "%d",i);
+        fputs(" -> ",fichero);
+        fputs("nodeCA",fichero);
+        fprintf (fichero, "%d",(i-1));
+        fputs(";\n",fichero);
     }
 }
