@@ -1,13 +1,25 @@
 digraph G {
-nodeCI0 [shape=oval, label="Cliente: 0"];
-nodeCI1 [shape=oval, label="Cliente: 1"];
+subgraph cluster_1 {
+label = "Cola Inicial" 
+nodeCI0 [shape=oval, label="Cliente: 1"];
+nodeCI1 [shape=oval, label="Cliente: 2"];
+nodeCI2 [shape=oval, label="Cliente: 3"];
+nodeCI3 [shape=oval, label="Cliente: 4"];
 nodeCI0 -> nodeCI1;
-nodeP1 [shape=record, label="{ |||||}"];
-nodeP2 [shape=record, label="{ |||||}"];
-nodeL0 [shape=box, label="{  Cliente: 2 Carreta: 0}"];
-nodeL1 [shape=box, label="{  Cliente: 3 Carreta: 1}"];
-nodeL2 [shape=box, label="{  Cliente: 4 Carreta: 2}"];
-nodeL3 [shape=box, label="{  Cliente: 5 Carreta: 3}"];
+nodeCI1 -> nodeCI2;
+nodeCI2 -> nodeCI3;
+}
+subgraph cluster_2 {
+label = "Carretas" 
+nodeP1 [shape=record, label="{ ||||}"];
+nodeP2 [shape=record, label="{ ||||}"];
+}
+subgraph cluster_3 {
+label = "Lista Compras" 
+nodeL0 [shape=box, label="{  Cliente: 5 Carreta: 0}"];
+nodeL1 [shape=box, label="{  Cliente: 6 Carreta: 1}"];
+nodeL2 [shape=box, label="{  Cliente: 7 Carreta: 2}"];
+nodeL3 [shape=box, label="{  Cliente: 0 Carreta: 5}"];
 nodeL0 -> nodeL1;
 nodeL1 -> nodeL2;
 nodeL2 -> nodeL3;
@@ -16,11 +28,15 @@ nodeL3 -> nodeL2;
 nodeL2 -> nodeL1;
 nodeL1 -> nodeL0;
 nodeL0 -> nodeL3;
-nodeCP0 [shape=oval, label="Cliente: 6"];
-nodeCP1 [shape=oval, label="Cliente: 7"];
-nodeCP0 -> nodeCP1;
-nodeCA0 [shape=box, label="Caja: 1 Turnos: 2 LIBRE"];
-nodeCA1 [shape=box, label="Caja: 2 Turnos: 2 LIBRE"];
+}
+subgraph cluster_4 {
+label = "Cola Pagos" 
+}
+subgraph cluster_5 {
+label = "Cajas" 
+nodeCA0 [shape=box, label="Caja: 1 Turnos: 2 OCUPADO"];
+nodeCA1 [shape=box, label="Caja: 2 Turnos: 3 OCUPADO"];
 nodeCA0 -> nodeCA1;
 nodeCA1 -> nodeCA0;
+}
 }
