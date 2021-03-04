@@ -208,7 +208,9 @@ int getNumAleatorio1a2(){
 void setNuevosClientes(int cantClientes){    
     struct ColaEspera *ct; 
     struct Cliente *clienteNuevo;
+    if(cantClientes > 0){
 
+    
     if (colaInicial->sigCola == NULL)
     {
         clienteNuevo = (struct Cliente *)malloc(sizeof(struct Cliente));
@@ -244,6 +246,7 @@ void setNuevosClientes(int cantClientes){
             printf("Se ingreso el cliente con codigo %i exitosamente\n",clienteNuevo2->codigoCli);             
         }
     } 
+    }
 }
 
 /*Metodo que inicializa alguna pila en su cantidad maxima de espacios*/
@@ -337,6 +340,8 @@ void setClientesCompras(struct Cliente *clienteIns){
 
 /*Metodo que crea la lista de las cajas*/
 void setNuevasCajas(){
+    if (cantCajas > 1)
+    {
     struct Caja *cajaTemp;
     cajaTemp = cajaInicial;
     for(int i = 0 ; i < cantCajas ; i++){
@@ -350,6 +355,7 @@ void setNuevasCajas(){
         cajaTemp = cajaNueva;
     }
     printf("Se insertaron %i cajas\n",cantCajas);
+    }
 }
 
 /*Metodo que inserta a algun cliente en la cola de pagos*/
@@ -536,29 +542,52 @@ void ingresarClientesACajas(){
  *si lo existe lo envia a la cola de pagos
 */
 void ingresarClientesAColaPagos(){
+    if (listaCompras->cliente != NULL)
+    {
+        
+    
+    
     struct ListaCompras *listTemp;
     listTemp = listaCompras;
     int indice = 0;
     int numA;
     numA = getNumAleatorio0a100();
+    numA = 0;
     printf("Se saco el num: %i \n",numA);
     while(listTemp->sigLis != listaCompras){
-        //printf("El cliente con codigo:%i esta en compras, indice: %i\n",listTemp->cliente->codigoCli,indice);
         if (numA == indice)
-        {
-            printf("El cliente con codigo: %i saldra de compras\n",listTemp->cliente->codigoCli);
-            setClientesColaPagos(listTemp->cliente);
-            struct ListaCompras *listAnt;
-            struct ListaCompras *listSig;
-            listAnt = listTemp->antLis;
-            listSig = listTemp->sigLis;
-            listAnt->sigLis = listSig;
-            listSig->antLis = listAnt;
-            free(listTemp);
-            break;
+        {           
+            if(indice == 0){
+                //TODO
+                struct ListaCompras *listAnt;
+                struct ListaCompras *listSig;
+                struct ListaCompras *listTemp2;
+                setClientesColaPagos(listaCompras->cliente);
+                listTemp2 = listaCompras;
+                listAnt = listaCompras->antLis;
+                listSig = listaCompras->sigLis;
+                listAnt->sigLis = listSig;
+                listSig->antLis = listAnt;
+                listaCompras = listSig;
+                free(listTemp2);
+                break;
+            }else{
+                printf("El cliente con codigo: %i saldra de compras\n",listTemp->cliente->codigoCli);
+                setClientesColaPagos(listTemp->cliente);
+                struct ListaCompras *listAnt;
+                struct ListaCompras *listSig;
+                listAnt = listTemp->antLis;
+                listSig = listTemp->sigLis;
+                listAnt->sigLis = listSig;
+                listSig->antLis = listAnt;
+                free(listTemp);
+                break;
+            }
+            
         }
         listTemp = listTemp->sigLis;
         indice++;
+    }
     }
 }
 
@@ -576,8 +605,12 @@ void ingresarClientesCompras(){
     
     
     while(ct != NULL){
+        ct = colaInicial;
         if(ct->sigCola == NULL){
             break;  
+        }
+        if(ct->cliente == NULL){
+            break;
         }
         //printf("Cliente cod: %i esta en cola espera\n",ct->cliente->codigoCli);
         struct PilaCarr *pilat;
@@ -640,6 +673,11 @@ void sacarClienteColaInicial(struct Carreta *carretaAsign){
     setClientesCompras(client);
     colaInicial = colaInicial->sigCola;
     free(ct);
+    /*if(colaInicial->sigCola != NULL){
+        
+    }else{
+        colaInicial->cliente = NULL;
+    }*/
 }
 
 
@@ -693,20 +731,6 @@ void graficar(){
 }
 
 void graficarColaInicial(FILE* fichero){
-    //fputs("node3 [shape=record, label=\"{ a | b | c }\"]",fichero);
-    /*fputs("nodeCI[shape=record, label=\"{ ",fichero); //a | b | c }\"]
-    while(ct != NULL){
-        if(ct->sigCola == NULL){
-            break;  
-        }          
-        fputs("Cliente: ",fichero);
-        //fputs(ct->cliente->codigoCli,fichero);
-        fprintf (fichero, "%d",ct->cliente->codigoCli);
-        fputs("|",fichero);
-        ct = ct->sigCola;        
-    }
-    fputs("}\"];\n",fichero);
-    */
 
     int cantClientes = 0;
     struct ColaEspera *ct;
@@ -744,7 +768,7 @@ void graficarCarretas(struct PilaCarr *pilaUsar,FILE* fichero){
         fputs("nodeP2 [shape=record, label=\"{ ",fichero);
     }
     
-    for(int i = 0; i < cantCarretPila ; i++){
+    for(int i = 0; i < cantCarretPila; i++){
         if (pilaTemp->carreta != NULL)
         {
             fputs("Carreta: ",fichero);
@@ -757,6 +781,9 @@ void graficarCarretas(struct PilaCarr *pilaUsar,FILE* fichero){
 }
 
 void graficarCompras(FILE* fichero){
+    if(listaCompras->cliente != NULL){
+
+    
     int numberNode = 0;
     struct ListaCompras *listTemp;
     listTemp = listaCompras;
@@ -798,6 +825,7 @@ void graficarCompras(FILE* fichero){
             fprintf (fichero, "%d",(i-1));
         }
         fputs(";\n",fichero);
+    }
     }
 }
 
