@@ -422,6 +422,7 @@ void setNuevosClientesEnCompras(){
 void siguientePaso(){
     int opcion = 3;
     while(opcion != 0){                
+        printf("\n");
         printf("Si desea terminar la simulacion ingrese [0]\n");
         printf("Si desea ingresar nuevos clientes ingrese [1]\n");
         printf("Si desea graficar el paso actual ingrese[2]\n");
@@ -552,8 +553,8 @@ void ingresarClientesAColaPagos(){
     int indice = 0;
     int numA;
     numA = getNumAleatorio0a100();
-    numA = 0;
-    printf("Se saco el num: %i \n",numA);
+    //numA = 0;
+    //printf("Se saco el num: %i \n",numA);
     while(listTemp->sigLis != listaCompras){
         if (numA == indice)
         {           
@@ -617,7 +618,7 @@ void ingresarClientesCompras(){
         if (cantCarr1 > 0 || cantCarr2 > 0)
         {
             int numA = getNumAleatorio1a2();
-            printf("Se saco el num: %i\n",numA);
+            //printf("Se saco el num: %i\n",numA);
             switch (numA)
             {
             case 1:
@@ -699,6 +700,11 @@ int contarCarretasEnPila(struct PilaCarr *pilaCarr){
     return cant;
 }
 
+/*Metodo que se llama al ingresar la opcion de graficar
+ *Se encarga de llamar a los demas metodo para
+ *crear y modificar un archivo .dot que se utilizara
+ *para crear el grafico en .png
+*/
 void graficar(){
     FILE* fichero;
     fichero = fopen("grafico.dot", "wt");
@@ -730,6 +736,9 @@ void graficar(){
     system("dot -Tpng grafico.dot -o grafico.png");
 }
 
+/*Metodo encargado de escribir en el documento .dot
+ *para agregar el grafico de los clientes en la cola inicial
+*/
 void graficarColaInicial(FILE* fichero){
 
     int cantClientes = 0;
@@ -758,6 +767,9 @@ void graficarColaInicial(FILE* fichero){
     }
 }
 
+/*Metodo encargado de escribir en el documento .dot
+ *para agregar el grafico de una pila de carretas
+*/
 void graficarCarretas(struct PilaCarr *pilaUsar,FILE* fichero){
     struct PilaCarr *pilaTemp;
     pilaTemp = pilaUsar;
@@ -780,6 +792,10 @@ void graficarCarretas(struct PilaCarr *pilaUsar,FILE* fichero){
     fputs("}\"];\n",fichero);
 }
 
+/*Metodo encargado de escribir en el documento .dot
+ *para agregar el grafico de los clientes que estan
+ *en la lista de compras
+*/
 void graficarCompras(FILE* fichero){
     if(listaCompras->cliente != NULL){
 
@@ -829,6 +845,10 @@ void graficarCompras(FILE* fichero){
     }
 }
 
+/*Metodo encargado de escribir en el documento .dot
+ *para agregar el grafico de los clientes que estan
+ *en la cola de pagos
+*/
 void graficarColaPagos(FILE* fichero){
     int cantClientes = 0;
     struct ColaEspera *ct;
@@ -856,6 +876,9 @@ void graficarColaPagos(FILE* fichero){
     }
 }
 
+/*Metodo encargado de escribir en el documento .dot
+ *para agregar el grafico de todas las cajas
+*/
 void graficarCajas(FILE* fichero){
     struct Caja *cajat;
     cajat = cajaInicial;
